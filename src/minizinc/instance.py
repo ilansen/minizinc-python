@@ -452,7 +452,12 @@ class Instance(Model):
                 # Process was cancelled by the user, a MiniZincError occurred, or
                 # an unexpected Python exception occurred
                 # First, terminate the process
-                proc.terminate()
+                if sys.platform == "win32":
+                    import signal
+
+                    proc.send_signal(signal.CTRL_C_EVENT)
+                else:
+                    proc.terminate()
                 _ = await proc.wait()
                 # Then, reraise the error that occurred
                 raise
