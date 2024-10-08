@@ -669,8 +669,8 @@ class Instance(Model):
 
             methods = {}
             if self._has_output_item_cache:
-                methods["__str__"] = (
-                    lambda myself: myself.__repr__()
+                methods["__str__"] = lambda myself: (
+                    myself.__repr__()
                     if myself._output_item == ""
                     else myself._output_item
                 )
