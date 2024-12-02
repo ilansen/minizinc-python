@@ -135,12 +135,18 @@ def parse_error(error_txt: bytes) -> MiniZincError:
             "MiniZinc stopped with a non-zero exit code, but did not output an "
             "error message. "
         )
-    elif location is not None and location.file is not None and location.file.exists():
+    elif (
+        location is not None
+        and location.file is not None
+        and location.file.exists()
+    ):
         with location.file.open() as f:
             for _ in range(location.lines[0] - 2):
                 f.readline()
             message += "\nFile fragment:\n"
-            for nr in range(max(1, location.lines[0] - 1), location.lines[1] + 2):
+            for nr in range(
+                max(1, location.lines[0] - 1), location.lines[1] + 2
+            ):
                 line = f.readline()
                 if line == "":
                     break

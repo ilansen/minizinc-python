@@ -47,7 +47,9 @@ def check_result(
         solution_nrs = [-1]
 
     solutions = (
-        result.solution if isinstance(result.solution, list) else [result.solution]
+        result.solution
+        if isinstance(result.solution, list)
+        else [result.solution]
     )
 
     for i in solution_nrs:

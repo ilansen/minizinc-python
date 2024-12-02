@@ -6,6 +6,8 @@ import asyncio
 import warnings
 from enum import Enum
 from json import JSONDecodeError, JSONDecoder, JSONEncoder, loads
+from types import ModuleType
+from typing import Optional
 
 from .error import MiniZincError, MiniZincWarning, error_from_stream_obj
 from .types import AnonEnum, ConstrEnum
@@ -13,7 +15,7 @@ from .types import AnonEnum, ConstrEnum
 try:
     import numpy
 except ImportError:
-    numpy = None
+    numpy: Optional[ModuleType] = None  # type: ignore
 
 
 class MZNJSONEncoder(JSONEncoder):
@@ -25,7 +27,9 @@ class MZNJSONEncoder(JSONEncoder):
         if isinstance(o, ConstrEnum):
             return {"c": o.constructor, "e": o.argument}
         if isinstance(o, set) or isinstance(o, range):
-            return {"set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]}
+            return {
+                "set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]
+            }
         if numpy is not None:
             if isinstance(o, numpy.ndarray):
                 return o.tolist()
@@ -93,7 +97,9 @@ def decode_json_stream(byte_stream: bytes, cls=None, **kw):
                 yield obj
 
 
-async def decode_async_json_stream(stream: asyncio.StreamReader, cls=None, **kw):
+async def decode_async_json_stream(
+    stream: asyncio.StreamReader, cls=None, **kw
+):
     buffer: bytes = b""
     while not stream.at_eof():
         try:

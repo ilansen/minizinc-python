@@ -101,22 +101,35 @@ _For more examples, please refer to the
 <!-- TESTING INSTRUCTIONS -->
 ## Testing
 
-MiniZinc Python uses [Tox](https://pypi.org/project/tox/) environments to test
-its coding style and functionality. The code style tests are executed using
-[Black](https://pypi.org/project/black/),
-[Flake8](https://pypi.org/project/flake8/), and
-[isort](https://pypi.org/project/isort/). The functionality tests are
-constructed using the [PyTest](https://pypi.org/project/pytest/) unit testing framework.
+MiniZinc Python uses [uv](https://docs.astral.sh/uv/) to manage its
+dependencies. To install the development dependencies run `uv sync --dev`.
 
-  * To install test-suite dependencies, run `poetry install --with dev` (requires installation of [Poetry](https://python-poetry.org))
-  * To run all tests, simply execute `poetry run tox` in the repository directory.
-  * Individual environments can be triggered using the `-e` flag.
-    * To test the coding style of the repository run `poetry run tox -e check`
-    * The `py3x` environments are used to test a specific Python version; for
-      example, to test using Python version 3.7 run `poetry run tox -e py37`
+Although continuous integration will test any code, it can be convenient to run
+the tests locally. The following commands can be used to test the MiniZinc
+Python package.
 
-Tox can also be used to generate the documentation, `poetry run tox -e docs`, and to
-typeset the Python code, `poetry run tox -e format`.
+- We use [PyTest](https://docs.pytest.org/en/stable/) to run a suite of unit
+tests. You can run these tests by executing:
+```bash
+uv run pytest
+```
+- We use [Ruff](https://docs.astral.sh/ruff/) to test against a range of Python
+style and performance guidelines. You can run the general linting using:
+```bash
+uv run ruff check
+```
+You can format the codebase to be compatible using:
+```bash
+uv run ruff format
+```
+(The continous integration will test that the code is correctly formatted using
+the `--check` flag.)
+- We use [Mypy](https://mypy.readthedocs.io/en/stable/) to check the type
+correctness of the codebase (for as far as possible). You can run the type
+checking using:
+```bash
+uv run mypy .
+```
 
 <!-- ROADMAP -->
 ## Roadmap

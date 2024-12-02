@@ -27,7 +27,9 @@ class TestSatisfy(InstanceTestCase):
         result = self.instance.solve(all_solutions=True)
         assert result.status == Status.ALL_SOLUTIONS
         assert len(result) == 5
-        assert sorted([sol.x for sol in result.solution]) == list(range(1, 5 + 1))
+        assert sorted([sol.x for sol in result.solution]) == list(
+            range(1, 5 + 1)
+        )
 
     def test_nr_solutions(self):
         result = self.instance.solve(nr_solutions=3)
@@ -93,7 +95,9 @@ class TestMaximise(InstanceTestCase):
     def test_solutions_no_intermediate(self):
         async def run():
             results = []
-            async for result in self.instance.solutions(intermediate_solutions=False):
+            async for result in self.instance.solutions(
+                intermediate_solutions=False
+            ):
                 results.append(result)
             return results
 

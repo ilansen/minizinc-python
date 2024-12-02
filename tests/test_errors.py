@@ -41,7 +41,9 @@ class TypeErrorTest(InstanceTestCase):
     """
 
     def test_type_error(self):
-        with pytest.raises(TypeError, match="No matching operator found") as error:
+        with pytest.raises(
+            TypeError, match="No matching operator found"
+        ) as error:
             self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
@@ -53,7 +55,9 @@ class SyntaxErrorTest(InstanceTestCase):
     code = "constrain true;"
 
     def test_syntax_error(self):
-        with pytest.raises(SyntaxError, match="unexpected bool literal") as error:
+        with pytest.raises(
+            SyntaxError, match="unexpected bool literal"
+        ) as error:
             self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")

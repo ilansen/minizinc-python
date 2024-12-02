@@ -182,7 +182,9 @@ class Instance(Model):
         )
         try:
             if sys.platform == "win32":
-                asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+                asyncio.set_event_loop_policy(
+                    asyncio.WindowsProactorEventLoopPolicy()
+                )
             return asyncio.run(coroutine)
         except RuntimeError as r:
             if "called from a running event loop" in r.args[0]:
@@ -318,11 +320,15 @@ class Instance(Model):
                 )
             if method == Method.SATISFY:
                 if "-a" not in self._solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -a flag")
+                    raise NotImplementedError(
+                        "Solver does not support the -a flag"
+                    )
                 cmd.append("--all-solutions")
             else:
                 if "-a-o" not in self._solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -a-o flag")
+                    raise NotImplementedError(
+                        "Solver does not support the -a-o flag"
+                    )
                 cmd.append("--all-optimal")
         elif nr_solutions is not None:
             if nr_solutions <= 0:
@@ -332,13 +338,20 @@ class Instance(Model):
                 )
             if self.method == Method.SATISFY:
                 if "-n" not in self._solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -n flag")
+                    raise NotImplementedError(
+                        "Solver does not support the -n flag"
+                    )
                 cmd.extend(["--num-solutions", str(nr_solutions)])
             else:
                 if "-n-o" not in self._solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -n-o flag")
+                    raise NotImplementedError(
+                        "Solver does not support the -n-o flag"
+                    )
                 cmd.extend(["--num-optimal", str(nr_solutions)])
-        elif "-i" not in self._solver.stdFlags or "-a" not in self._solver.stdFlags:
+        elif (
+            "-i" not in self._solver.stdFlags
+            or "-a" not in self._solver.stdFlags
+        ):
             # Enable intermediate solutions when possible
             # (ensure that solvers always output their best solution)
             cmd.append("--intermediate-solutions")
@@ -357,7 +370,9 @@ class Instance(Model):
 
         # Set time limit for the MiniZinc solving
         if time_limit is not None:
-            cmd.extend(["--time-limit", str(int(time_limit.total_seconds() * 1000))])
+            cmd.extend(
+                ["--time-limit", str(int(time_limit.total_seconds() * 1000))]
+            )
 
         if verbose:
             cmd.append("--verbose")
@@ -372,7 +387,9 @@ class Instance(Model):
                 cmd.extend([flag, value])
 
         multiple_solutions = (
-            all_solutions or intermediate_solutions or (nr_solutions is not None)
+            all_solutions
+            or intermediate_solutions
+            or (nr_solutions is not None)
         )
 
         # Add files as last arguments
@@ -399,8 +416,8 @@ class Instance(Model):
                 async for obj in decode_async_json_stream(
                     proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
                 ):
-                    new_solution, new_status, statistics = self._parse_stream_obj(
-                        obj, statistics
+                    new_solution, new_status, statistics = (
+                        self._parse_stream_obj(obj, statistics)
                     )
                     if new_status is not None:
                         status = new_status
@@ -426,14 +443,16 @@ class Instance(Model):
                 if remainder != b"":
                     try:
                         obj = json.loads(
-                            remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
+                            remainder,
+                            cls=MZNJSONDecoder,
+                            enum_map=self._enum_map,
                         )
                     except json.JSONDecodeError as e:
                         raise MiniZincError(
                             message=f"MiniZinc driver output a message that cannot be parsed as JSON:\n{repr(remainder)}"
                         ) from e
-                    new_solution, new_status, statistics = self._parse_stream_obj(
-                        obj, statistics
+                    new_solution, new_status, statistics = (
+                        self._parse_stream_obj(obj, statistics)
                     )
                     if new_status is not None:
                         status = new_status
@@ -539,7 +558,9 @@ class Instance(Model):
                 )
                 gen_files.append(file)
                 file.write(
-                    json.dumps(data, cls=MZNJSONEncoder, ensure_ascii=False).encode()
+                    json.dumps(
+                        data, cls=MZNJSONEncoder, ensure_ascii=False
+                    ).encode()
                 )
                 file.close()
                 files.append(Path(file.name))
@@ -616,7 +637,9 @@ class Instance(Model):
         """
         with self.files() as files:
             assert len(files) > 0
-            output = self._driver._run(["--model-interface-only"] + files, self._solver)
+            output = self._driver._run(
+                ["--model-interface-only"] + files, self._solver
+            )
         interface = None
         for obj in decode_json_stream(output.stdout):
             if obj["type"] == "interface":
@@ -639,7 +662,10 @@ class Instance(Model):
 
         if self.output_type is None or (
             issubclass(self.output_type, _GeneratedSolution)
-            and (self._output_cache != old_output or self._method_cache != old_method)
+            and (
+                self._output_cache != old_output
+                or self._method_cache != old_method
+            )
         ):
             fields = []
             self._field_renames = []
@@ -664,7 +690,8 @@ class Instance(Model):
                     fields.append((k, v))
 
             minizinc.logger.debug(
-                f"CLIInstance:analyse -> output fields: " f"{[f[0:2] for f in fields]}"
+                f"CLIInstance:analyse -> output fields: "
+                f"{[f[0:2] for f in fields]}"
             )
 
             methods = {}
@@ -732,15 +759,21 @@ class Instance(Model):
 
         cmd: List[Any] = ["--compile", "--statistics"]
 
-        fzn = tempfile.NamedTemporaryFile(prefix="fzn_", suffix=".fzn", delete=False)
+        fzn = tempfile.NamedTemporaryFile(
+            prefix="fzn_", suffix=".fzn", delete=False
+        )
         cmd.extend(["--fzn", fzn.name])
         fzn.close()
-        ozn = tempfile.NamedTemporaryFile(prefix="ozn_", suffix=".fzn", delete=False)
+        ozn = tempfile.NamedTemporaryFile(
+            prefix="ozn_", suffix=".fzn", delete=False
+        )
         cmd.extend(["--ozn", ozn.name])
         ozn.close()
 
         if time_limit is not None:
-            cmd.extend(["--time-limit", str(int(time_limit.total_seconds() * 1000))])
+            cmd.extend(
+                ["--time-limit", str(int(time_limit.total_seconds() * 1000))]
+            )
 
         # Set compiler optimisation level if specified
         if optimisation_level is not None:

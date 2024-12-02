@@ -368,7 +368,9 @@ class TestAnn(InstanceTestCase):
         assert result["x"] == "promise_total"
 
     def test_ann_call(self):
-        self.instance.add_string('ann: x :: add_to_output = expression_name("test");')
+        self.instance.add_string(
+            'ann: x :: add_to_output = expression_name("test");'
+        )
         result = self.instance.solve()
         assert result.status is Status.SATISFIED
         assert result["x"] == 'expression_name("test")'
