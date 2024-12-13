@@ -31,7 +31,9 @@ class TestAssign(InstanceTestCase):
 
     def test_reassign(self):
         self.instance["n"] = 14
-        with pytest.raises(AssertionError, match="cannot be assigned multiple values."):
+        with pytest.raises(
+            AssertionError, match="cannot be assigned multiple values."
+        ):
             self.instance["n"] = 15
 
 

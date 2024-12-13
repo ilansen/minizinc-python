@@ -152,7 +152,7 @@ class TestEnum(InstanceTestCase):
 
 
 class TestSets(InstanceTestCase):
-    def test_ranges(self):
+    def test_sets(self):
         self.instance.add_string(
             """
             var set of 0..10: s;
@@ -163,8 +163,8 @@ class TestSets(InstanceTestCase):
 
         self.instance["s1"] = range(1, 4)
         result = self.instance.solve()
-        assert isinstance(result["s"], range)
-        assert result["s"] == range(1, 4)
+        assert isinstance(result["s"], set)
+        assert result["s"] == set(range(1, 4))
 
 
 class TestString(InstanceTestCase):
@@ -234,7 +234,6 @@ class TestRecord(InstanceTestCase):
         reason="requires MiniZinc 2.7 or higher",
     )
     def test_simple_record(self):
-        pytest.skip
         self.instance.add_string(
             """
         var record(1..3: a, bool: b, 1.0..3.0: c): x;
@@ -369,7 +368,9 @@ class TestAnn(InstanceTestCase):
         assert result["x"] == "promise_total"
 
     def test_ann_call(self):
-        self.instance.add_string('ann: x :: add_to_output = expression_name("test");')
+        self.instance.add_string(
+            'ann: x :: add_to_output = expression_name("test");'
+        )
         result = self.instance.solve()
         assert result.status is Status.SATISFIED
         assert result["x"] == 'expression_name("test")'

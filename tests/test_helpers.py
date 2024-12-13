@@ -41,7 +41,10 @@ class CheckResults(InstanceTestCase):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve(all_solutions=True)
         assert check_result(
-            self.instance, result, self.other_solver, range(len(result.solution))
+            self.instance,
+            result,
+            self.other_solver,
+            range(len(result.solution)),
         )
 
     def test_check_specific(self):

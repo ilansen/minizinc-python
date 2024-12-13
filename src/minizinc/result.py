@@ -162,7 +162,8 @@ class Status(Enum):
         elif b"=====UNSATISFIABLE=====" in output:
             s = cls.UNSATISFIABLE
         elif (
-            b"=====UNSATorUNBOUNDED=====" in output or b"=====UNBOUNDED=====" in output
+            b"=====UNSATorUNBOUNDED=====" in output
+            or b"=====UNBOUNDED=====" in output
         ):
             s = cls.UNBOUNDED
         elif method is Method.SATISFY:
@@ -275,7 +276,9 @@ class Result:
             if self.solution is not None:
                 if isinstance(self.solution, list):
                     if isinstance(key, tuple):
-                        return getattr(self.solution.__getitem__(key[0]), key[1])
+                        return getattr(
+                            self.solution.__getitem__(key[0]), key[1]
+                        )
                     else:
                         return self.solution.__getitem__(key)
                 else:
@@ -283,7 +286,7 @@ class Result:
             else:
                 raise KeyError
         except AttributeError:
-            raise KeyError
+            raise KeyError from None
 
     def __len__(self):
         """Returns the number of solutions included in the Result object

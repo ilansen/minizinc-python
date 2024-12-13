@@ -5,15 +5,17 @@
 import asyncio
 import warnings
 from enum import Enum
-from json import JSONDecoder, JSONEncoder, loads
+from json import JSONDecodeError, JSONDecoder, JSONEncoder, loads
+from types import ModuleType
+from typing import Optional
 
-from .error import MiniZincWarning, error_from_stream_obj
+from .error import MiniZincError, MiniZincWarning, error_from_stream_obj
 from .types import AnonEnum, ConstrEnum
 
 try:
     import numpy
 except ImportError:
-    numpy = None
+    numpy: Optional[ModuleType] = None  # type: ignore
 
 
 class MZNJSONEncoder(JSONEncoder):
@@ -25,7 +27,9 @@ class MZNJSONEncoder(JSONEncoder):
         if isinstance(o, ConstrEnum):
             return {"c": o.constructor, "e": o.argument}
         if isinstance(o, set) or isinstance(o, range):
-            return {"set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]}
+            return {
+                "set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]
+            }
         if numpy is not None:
             if isinstance(o, numpy.ndarray):
                 return o.tolist()
@@ -57,10 +61,6 @@ class MZNJSONDecoder(JSONDecoder):
     def mzn_object_hook(self, obj):
         if isinstance(obj, dict):
             if len(obj) == 1 and "set" in obj:
-                if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
-                    assert len(obj["set"][0]) == 2
-                    return range(obj["set"][0][0], obj["set"][0][1] + 1)
-
                 li = []
                 for item in obj["set"]:
                     if isinstance(item, list):
@@ -80,19 +80,26 @@ def decode_json_stream(byte_stream: bytes, cls=None, **kw):
     for line in byte_stream.split(b"\n"):
         line = line.strip()
         if line != b"":
-            obj = loads(line, cls=cls, **kw)
+            try:
+                obj = loads(line, cls=cls, **kw)
+            except JSONDecodeError as e:
+                raise MiniZincError(
+                    message=f"MiniZinc driver output a message that cannot be parsed as JSON:\n{repr(line)}"
+                ) from e
             if obj["type"] == "warning" or (
                 obj["type"] == "error" and obj["what"] == "warning"
             ):
                 # TODO: stack trace and location
-                warnings.warn(obj["message"], MiniZincWarning)
+                warnings.warn(obj["message"], MiniZincWarning, stacklevel=1)
             elif obj["type"] == "error":
                 raise error_from_stream_obj(obj)
             else:
                 yield obj
 
 
-async def decode_async_json_stream(stream: asyncio.StreamReader, cls=None, **kw):
+async def decode_async_json_stream(
+    stream: asyncio.StreamReader, cls=None, **kw
+):
     buffer: bytes = b""
     while not stream.at_eof():
         try:
@@ -100,12 +107,17 @@ async def decode_async_json_stream(stream: asyncio.StreamReader, cls=None, **kw)
             buffer = buffer.strip()
             if buffer == b"":
                 continue
-            obj = loads(buffer, cls=cls, **kw)
+            try:
+                obj = loads(buffer, cls=cls, **kw)
+            except JSONDecodeError as e:
+                raise MiniZincError(
+                    message=f"MiniZinc driver output a message that cannot be parsed as JSON:\n{repr(buffer)}"
+                ) from e
             if obj["type"] == "warning" or (
                 obj["type"] == "error" and obj["what"] == "warning"
             ):
                 # TODO: stack trace and location
-                warnings.warn(obj["message"], MiniZincWarning)
+                warnings.warn(obj["message"], MiniZincWarning, stacklevel=1)
             elif obj["type"] == "error":
                 raise error_from_stream_obj(obj)
             else:

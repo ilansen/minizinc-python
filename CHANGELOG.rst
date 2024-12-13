@@ -9,12 +9,32 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Removed
+^^^^^^^
+
+- **BREAKING:** The project no longer supports Python 3.7. This change will make
+  it easier to manage MiniZinc Python's build system.
+
 Changed
 ^^^^^^^
 
 - Minimum supported version of MiniZinc has increased from 2.5.4 to 2.6.0.
 - ``Instance.solutions`` is now able to use the ``intermediate_solutions`` flag
   correctly and will only yield a single solution when it is set to ``False``.
+- ``helpers.check_solution`` now includes an optional time limit flag. If the
+  time limit is exceeded, then a ``TimeoutError`` exception will be raised.
+- ``helpers.check_solution`` will no longer capture MiniZinc exceptions.
+  Capturing these exceptions sometimes hid problems.
+- The ``timeout`` parameter has been renamed to ``time_limit`` in
+  ``Instance.solve``, ``Instance.solve_async``, and ``Instance.solutions``. The
+  ``timeout`` parameter is still accepted, but will add a
+  ``DeprecationWarning`` and will be removed in future versions.
+
+Fixed
+^^^^^
+
+- Fix problem where some exceptions when creating processes where hidden and
+  would then cause errors where the ``proc`` variable did not exist.
 
 0.9.0_ - 2023-04-04
 -------------------

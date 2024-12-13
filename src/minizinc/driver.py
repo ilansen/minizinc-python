@@ -28,7 +28,11 @@ MAC_LOCATIONS = [
     str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
     str(Path("/Applications/MiniZincIDE.app/Contents/Resources/bin")),
     str(Path("~/Applications/MiniZincIDE.app/Contents/Resources").expanduser()),
-    str(Path("~/Applications/MiniZincIDE.app/Contents/Resources/bin").expanduser()),
+    str(
+        Path(
+            "~/Applications/MiniZincIDE.app/Contents/Resources/bin"
+        ).expanduser()
+    ),
 ]
 #: Default locations on Windows where the MiniZinc packaged release would be installed
 WIN_LOCATIONS = [
@@ -118,7 +122,9 @@ class Driver:
             Tuple[int, ...]: the parsd version reported by the MiniZinc driver
         """
         if self._version is None:
-            match = re.search(r"version (\d+)\.(\d+)\.(\d+)", self.minizinc_version)
+            match = re.search(
+                r"version (\d+)\.(\d+)\.(\d+)", self.minizinc_version
+            )
             assert match
             self._version = tuple([int(i) for i in match.groups()])
         return self._version
@@ -151,7 +157,11 @@ class Driver:
         allowed_fields = {f.name for f in fields(Solver)}
         for s in solvers:
             obj = Solver(
-                **{key: value for (key, value) in s.items() if key in allowed_fields}
+                **{
+                    key: value
+                    for (key, value) in s.items()
+                    if key in allowed_fields
+                }
             )
             if obj.version == "<unknown version>":
                 obj._identifier = obj.id
@@ -202,7 +212,9 @@ class Driver:
             cmd = [str(self._executable), "--allow-multiple-assignments"] + [
                 str(arg) for arg in args
             ]
-            minizinc.logger.debug(f"CLIDriver:run -> command: \"{' '.join(cmd)}\"")
+            minizinc.logger.debug(
+                f"CLIDriver:run -> command: \"{' '.join(cmd)}\""
+            )
             output = subprocess.run(
                 cmd,
                 stdin=None,
@@ -218,7 +230,9 @@ class Driver:
                     conf,
                     "--allow-multiple-assignments",
                 ] + [str(arg) for arg in args]
-                minizinc.logger.debug(f"CLIDriver:run -> command: \"{' '.join(cmd)}\"")
+                minizinc.logger.debug(
+                    f"CLIDriver:run -> command: \"{' '.join(cmd)}\""
+                )
                 output = subprocess.run(
                     cmd,
                     stdin=None,

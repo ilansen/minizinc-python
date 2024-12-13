@@ -47,7 +47,9 @@ def check_result(
         solution_nrs = [-1]
 
     solutions = (
-        result.solution if isinstance(result.solution, list) else [result.solution]
+        result.solution
+        if isinstance(result.solution, list)
+        else [result.solution]
     )
 
     for i in solution_nrs:
@@ -58,11 +60,18 @@ def check_result(
     return True
 
 
+class TimeoutError(Exception):
+    """Exception raised for timeout errors (UNKNOWN status) when checking solutions"""
+
+    pass
+
+
 def check_solution(
     model: minizinc.Model,
     solution: Union[DataClass, Dict[str, Any]],
     status: minizinc.Status,
     solver: minizinc.Solver,
+    time_limit: Optional[timedelta] = timedelta(seconds=30),
 ) -> bool:
     """Checks a solution for a model using the given solver.
 
@@ -73,42 +82,44 @@ def check_solution(
     reached. Note that this method will not check the optimality of a solution.
 
     Args:
-        model (Model): To model for which the solution was provided
-        solution (Union[DataClass, Dict[str, Any]]): The solution to be checked
-        status (Status): The expected (compatible) MiniZinc status
+        model (Model): The model for which the solution was provided.
+        solution (Union[DataClass, Dict[str, Any]]): The solution to be checked.
+        status (Status): The expected (compatible) MiniZinc status.
         solver (Solver): The solver configuration used to check the
+            solution.
+        time_limit (Optional(timedelta)): An optional time limit to check the
             solution.
 
     Returns:
         bool: True if the given solution are correctly verified.
 
+    Raises:
+        TimeoutError: the given time limit was exceeded.
     """
     instance = minizinc.Instance(solver, model)
     if is_dataclass(solution):
         solution = asdict(solution)
 
+    assert isinstance(solution, dict)
     for k, v in solution.items():
         if k not in ("objective", "_output_item", "_checker"):
             instance[k] = v
-    try:
-        check = instance.solve(timeout=timedelta(seconds=5))
-        if status == check.status:
-            return True
-        elif check.status in [
-            minizinc.Status.SATISFIED,
-            minizinc.Status.OPTIMAL_SOLUTION,
-        ] and status in [
-            minizinc.Status.SATISFIED,
-            minizinc.Status.OPTIMAL_SOLUTION,
-            minizinc.Status.ALL_SOLUTIONS,
-        ]:
-            return True
-        else:
-            return False
-    except minizinc.MiniZincError:
-        if status == minizinc.Status.ERROR:
-            return True
-        return False
+    check = instance.solve(time_limit=time_limit)
+
+    if check.status is minizinc.Status.UNKNOWN:
+        raise TimeoutError(
+            f"Solution checking failed because the checker exceeded the allotted time limit of {time_limit}"
+        )
+    elif status == check.status:
+        return True
+    return check.status in [
+        minizinc.Status.SATISFIED,
+        minizinc.Status.OPTIMAL_SOLUTION,
+    ] and status in [
+        minizinc.Status.SATISFIED,
+        minizinc.Status.OPTIMAL_SOLUTION,
+        minizinc.Status.ALL_SOLUTIONS,
+    ]
 
 
 def _add_diversity_to_opt_model(
@@ -127,13 +138,17 @@ def _add_diversity_to_opt_model(
 
         # Fix the solution to given once
         if sol_fix is not None:
-            inst.add_string(f"constraint {varname} == {list(sol_fix[varname])};\n")
+            inst.add_string(
+                f"constraint {varname} == {list(sol_fix[varname])};\n"
+            )
 
     # Add the optimal objective.
     if obj_annots["sense"] != "0":
         obj_type = obj_annots["type"]
         inst.add_string(f"{obj_type}: div_orig_opt_objective :: output;\n")
-        inst.add_string(f"constraint div_orig_opt_objective == {obj_annots['name']};\n")
+        inst.add_string(
+            f"constraint div_orig_opt_objective == {obj_annots['name']};\n"
+        )
         if obj_annots["sense"] == "-1":
             inst.add_string(f"solve minimize {obj_annots['name']};\n")
         else:

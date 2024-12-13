@@ -82,7 +82,10 @@ class MznAnalyse:
         remove_items: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         # Do not change the order of the arguments 'inline-includes', 'remove-items:output', 'remove-litter' and 'get-diversity-anns'
-        tool_run_cmd: List[Union[str, Path]] = [str(self._executable), "json_out:-"]
+        tool_run_cmd: List[Union[str, Path]] = [
+            str(self._executable),
+            "json_out:-",
+        ]
 
         for f in mzn_files:
             tool_run_cmd.append(str(f))
