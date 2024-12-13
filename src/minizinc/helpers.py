@@ -126,7 +126,7 @@ def _add_diversity_to_opt_model(
     inst: minizinc.Instance,
     obj_annots: Dict[str, Any],
     vars: List[Dict[str, Any]],
-    sol_fix: Dict[str, Iterable] = None,
+    sol_fix: Optional[Dict[str, Iterable]] = None,
 ):
     for var in vars:
         # Current and previous variables

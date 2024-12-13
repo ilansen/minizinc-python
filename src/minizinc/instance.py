@@ -344,7 +344,7 @@ class Instance(Model):
                 if reference_solution:
                     if isinstance(reference_solution, Result) and is_dataclass(
                         reference_solution.solution
-                    ):
+                    ) and not isinstance(reference_solution.solution, type):
                         solution_obj = asdict(reference_solution.solution)
                     else:
                         assert isinstance(reference_solution, dict)
