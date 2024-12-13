@@ -159,6 +159,79 @@ better solution is found in the last 3 iterations, it will stop.
             else:
                 i += 1
 
+Getting Diverse Solutions
+-------------------------
+
+It is sometimes useful to find multiple solutions to a problem
+that exhibit some desired measure of diversity.  For example, in a
+satisfaction problem, we may wish to have solutions that differ in
+the assignments to certain variables but we might not care about some
+others.  Another important case is where we wish to find a diverse set
+of close-to-optimal solutions.
+
+The following example demonstrates a simple optimisation problem where
+we wish to find a set of 5 diverse, close to optimal solutions.
+First, to define the diversity metric, we annotate the solve item with
+the :func:`diverse_pairwise(x, "hamming_distance")` annotation to indicate that
+we wish to find solutions that have the most differences to each other.
+The `diversity.mzn` library also defines the "manhattan_distance"
+diversity metric which computes the sum of the absolution difference
+between solutions.
+Second, to define how many solutions, and how close to optimal we wish the
+solutions to be, we use the :func:`diversity_incremental(5, 1.0)` annotation.
+This indicates that we wish to find 5 diverse solutions, and we will
+accept solutions that differ from the optimal by 100% (Note that this is
+the ratio of the optimal solution, not an optimality gap).
+
+..  code-block:: minizinc
+
+    % AllDiffOpt.mzn
+    include "alldifferent.mzn";
+    include "diversity.mzn";
+
+    array[1..5] of var 1..5: x;
+    constraint alldifferent(x);
+
+    solve :: diverse_pairwise(x, "hamming_distance")
+          :: diversity_incremental(5, 1.0) % number of solutions, gap %
+          minimize x[1];
+
+The :func:`Instance.diverse_solutions` method will use these annotations
+to find the desired set of diverse solutions. If we are solving an
+optimisation problem and want to find "almost" optimal solutions we must
+first acquire the optimal solution.  This solution is then passed to
+the :func:`diverse_solutions()` method in the :func:`reference_solution` parameter.
+We loop until we see a duplicate solution.
+
+..  code-block:: python
+
+    import asyncio
+    import minizinc
+
+    async def main():
+        # Create a MiniZinc model
+        model = minizinc.Model("AllDiffOpt.mzn")
+
+        # Transform Model into a instance
+        gecode = minizinc.Solver.lookup("gecode")
+        inst = minizinc.Instance(gecode, model)
+
+        # Solve the instance
+        result = await inst.solve_async(all_solutions=False)
+        print(result.objective)
+
+        # Solve the instance to obtain diverse solutions
+        sols = []
+        async for divsol in inst.diverse_solutions(reference_solution=result):
+            if divsol["x"] not in sols:
+                sols.append(divsol["x"])
+            else:
+                print("New diverse solution already in the pool of diverse solutions. Terminating...")
+                break
+            print(divsol["x"])
+
+    asyncio.run(main())
+
 
 Concurrent Solving
 ------------------
