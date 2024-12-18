@@ -392,7 +392,7 @@ class Instance(Model):
                     child = _add_diversity_to_div_model(
                         child,
                         variables,
-                        obj_anns["sense"],
+                        div_anns,
                         max_gap,
                         prev_solutions,
                     )
