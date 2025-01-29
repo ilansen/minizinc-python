@@ -166,7 +166,6 @@ def _add_diversity_to_div_model(
     gap: Union[int, float],
     sols: Dict[str, Any],
 ):
-
     # Add the 'previous solution variables'
     for var in vars:
         # Current and previous variables
@@ -204,8 +203,12 @@ def _add_diversity_to_div_model(
             )
 
     obj_sense = div_anns["objective"]["sense"]
-    aggregator = div_anns["aggregator"] if div_anns["aggregator"] != "" else "sum"
-    combinator = div_anns["combinator"] if div_anns["combinator"] != "" else "sum"
+    aggregator = (
+        div_anns["aggregator"] if div_anns["aggregator"] != "" else "sum"
+    )
+    combinator = (
+        div_anns["combinator"] if div_anns["combinator"] != "" else "sum"
+    )
 
     # Add the bound on the objective.
     if obj_sense == "-1":
@@ -214,7 +217,9 @@ def _add_diversity_to_div_model(
         inst.add_string(f"constraint div_orig_objective >= {gap};\n")
 
     # Add new objective: maximize diversity.
-    div_combinator = ", ".join([f'{var["coef"]} * dist_{var["name"]}[sol]' for var in vars])
+    div_combinator = ", ".join(
+        [f'{var["coef"]} * dist_{var["name"]}[sol]' for var in vars]
+    )
     dist_total = f"{aggregator}([{combinator}([{div_combinator}]) | sol in 1..{len(prevsol)}])"
     inst.add_string(f"solve maximize {dist_total};\n")
 
